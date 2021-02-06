@@ -1,0 +1,7 @@
+{
+  "devApiUrl": "http://api.fjutcoder.com/cf/",
+  "apiUrl_dev_backUp": "http://localhost:8886/cf",
+  "apiUrl_prod_backUp": "http://210.34.193.212:8886/cf",
+  "apiUrl_prod_backUp2": "http://39.100.235.47:8886/cf",
+  "loggerDisable": false
+}
