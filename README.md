@@ -1,4 +1,4 @@
-# coding_first_web_cli
+# siseoj-web
 
 ## 项目初始化
 ```
