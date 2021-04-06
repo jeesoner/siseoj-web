@@ -2,39 +2,39 @@
   <div class="problem-body">
     <div class="function-bar">
       <el-input
-        v-model="searchNick"
+        v-model="queryParams.username"
         class="bar-search-item-input"
         size="mini"
+        clearable
         placeholder="请输入昵称"
-      >
-        <template slot="prepend">用户昵称</template>
-      </el-input>
+      />
       <el-input
-        v-model="searchPid"
+        v-model="queryParams.pid"
         class="bar-search-item-input"
         size="mini"
+        clearable
         placeholder="请输入题号"
-      >
-        <template slot="prepend">题号</template>
-      </el-input>
+      />
       <el-select
-        v-model="searchResult"
+        v-model="queryParams.status"
         class="bar-search-item-select"
         size="mini"
+        clearable
         placeholder="评测结果"
       >
         <el-option
           v-for="item in resultList"
           :key="item.value"
-          :class="switchResultClass(item.name)"
+          :style="getStatusFontColor(item.value)"
           :label="item.name"
           :value="item.value"
         />
       </el-select>
       <el-select
-        v-model="searchLanguage"
+        v-model="queryParams.language"
         class="bar-search-item-select"
         size="mini"
+        clearable
         placeholder="语言"
       >
         <el-option
@@ -49,41 +49,28 @@
         class="bar-search-item"
         type="primary"
         icon="el-icon-search"
-        @click="handleSelect"
-      >筛选</el-button>
-      <el-button
-        size="mini"
-        class="bar-search-item"
-        type="info"
-        icon="el-icon-s-grid"
-        @click="handleBackToAll"
-      >查看全部</el-button>
+        @click="search"
+      >搜索</el-button>
     </div>
-    <el-pagination
-      layout="prev, pager, next, jumper"
-      :current-page="currentPage"
-      :total="total"
-      :page-size="pageSize"
-      @current-change="switchPage"
-    />
     <el-table
       v-loading="loading"
       :data="tableData"
+      :header-cell-style="{background:'#eef1f6',color:'#606266'}"
     >
       <el-table-column
         prop="id"
-        label="#"
-        min-width="8%"
+        label="Run ID"
+        min-width="5%"
       />
       <el-table-column
-        label="昵称"
+        label="用户名"
         min-width="12%"
       >
         <template slot-scope="scope">
           <el-link
             type="primary"
             @click="toUser(scope.row.username)"
-          >{{ scope.row.nick }}</el-link>
+          >{{ scope.row.username }}</el-link>
         </template>
       </el-table-column>
       <el-table-column
@@ -93,42 +80,44 @@
         <template slot-scope="scope">
           <el-link
             type="primary"
-            @click="toSubmit(scope.row.problemId)"
-          >{{ scope.row.problemId }}</el-link>
+            @click="goProblemDetails(scope.row.pid)"
+          >{{ scope.row.pid }}</el-link>
         </template>
       </el-table-column>
       <el-table-column
         label="评测结果"
-        min-width="14%"
+        min-width="15%"
       >
         <template slot-scope="scope">
-          <el-tag
-            size="medium"
-            effect="dark"
-            :type="switchResultColor(scope.row.result)"
-          >{{ scope.row.result }}</el-tag>
-
+          <el-tag size="mini" effect="dark" :type="getStatusColor(scope.row.status)">
+            <i
+              v-if="scope.row.status === JUDGE_STATUS_RESERVE['pending'] ||
+                scope.row.status === JUDGE_STATUS_RESERVE['judging']"
+              class="el-icon-loading"
+            />
+            {{ JUDGE_STATUS[scope.row.status].name }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column
-        label="代码"
+        label="语言"
         min-width="8%"
       >
         <template slot-scope="scope">
           <el-link
             type="primary"
             @click="toCodeView(scope.row.id)"
-          >{{ scope.row.language }}</el-link>
+          >{{ LANGUAGE[scope.row.language] }}</el-link>
         </template>
       </el-table-column>
       <el-table-column
-        prop="timeUsed"
-        label="耗时"
+        prop="time"
+        label="耗时(ms)"
         min-width="8%"
       />
       <el-table-column
-        prop="memoryUsed"
-        label="使用内存"
+        prop="memory"
+        label="使用内存(KB)"
         min-width="8%"
       />
       <el-table-column
@@ -139,79 +128,105 @@
       <el-table-column
         prop="submitTime"
         label="提交时间"
-        min-width="14%"
+        min-width="16%"
       >
         <template slot-scope="scope">
-          <span>{{ new Date(scope.row.submitTime).toLocaleString(
-            'chinese',
-            { hour12: false }
-          ) }}</span></template>
+          <span>{{ scope.row.submitTime }}</span></template>
       </el-table-column>
     </el-table>
-    <el-pagination
-      class="bottom-pagination"
-      layout="prev, pager, next, jumper"
-      :current-page="currentPage"
-      :total="total"
-      :page-size="pageSize"
-      @current-change="switchPage"
-    />
+    <pagination v-show="total>0" :total="total" :page.sync="pagination.current" :limit.sync="pagination.size" @pagination="search" />
   </div>
 </template>
 
 <script>
+import Pagination from '@/components/Pagination'
+import { JUDGE_STATUS, JUDGE_STATUS_RESERVE, LANGUAGE } from '@/utils/constants'
+import submitApi from '@/api/submission/submit'
+
 export default {
-  props: {
-  },
+  components: { Pagination },
   data() {
     return {
+      // 查询参数
+      queryParams: {},
+      total: 10,
+      pagination: {
+        size: 10,
+        current: 1
+      },
       searchNick: '',
       searchPid: '',
-      searchLanguage: '',
-      searchResult: '',
+      searchLanguage: null,
+      searchResult: null,
       currentPage: 1,
       pageSize: 20,
-      total: 0,
       tableData: [],
       isSearch: false,
       loading: false,
       resultList: [
-        { name: '-', value: '' },
-        { name: 'Pending...', value: 'Pending...' },
-        { name: 'Accepted', value: 'Accepted' },
-        { name: 'Wrong Answer', value: 'Wrong Answer' },
-        { name: 'Compilation Error', value: 'Compilation Error' },
-        { name: 'Runtime Error', value: 'Runtime Error' },
-        { name: 'Time Limit Exceeded', value: 'Time Limit Exceeded' },
-        { name: 'Memory Limit Exceeded', value: 'Memory Limit Exceeded' },
-        { name: 'Output Limit Exceeded', value: 'Output Limit Exceeded' },
-        { name: 'Presentation Error', value: 'Presentation Error' },
-        { name: 'System Error', value: 'System Error' },
-        // { name: 'Running......', value: 'Running......' },
-        { name: 'Submit Error', value: 'Submit Error' },
-        { name: 'Judging...', value: 'Judging...' },
-        { name: 'Score', value: 'Score' }
+        { name: 'Pending', value: 0 },
+        { name: 'Accepted', value: 1 },
+        { name: 'Wrong Answer', value: 2 },
+        { name: 'Compilation Error', value: 3 },
+        { name: 'Runtime Error', value: 4 },
+        { name: 'Time Limit Exceeded', value: 5 },
+        { name: 'Memory Limit Exceeded', value: 6 },
+        { name: 'Output Limit Exceeded', value: 7 },
+        { name: 'Presentation Error', value: 8 },
+        { name: 'System Error', value: 9 },
+        { name: 'Submitted Failed', value: 11 },
+        { name: 'Judging', value: 12 }
       ],
       langList: [
-        { name: '-', value: '' },
-        { name: 'G++', value: 'G++' },
-        { name: 'GCC', value: 'GCC' },
-        { name: 'JAVA', value: 'JAVA' },
-        { name: 'Python2', value: 'Python2' },
-        { name: 'G++11', value: 'G++11' },
-        { name: 'GCC11', value: 'GCC11' },
-        { name: 'VC++', value: 'VC++' },
-        { name: 'C#', value: 'C#' },
-        { name: 'GO 1.8', value: 'GO 1.8' },
-        { name: 'JavaScript', value: 'JavaScript' },
-        { name: 'Pascal', value: 'Pascal' }
-      ]
+        { name: 'C/C++', value: 1 },
+        { name: 'Java', value: 2 },
+        { name: 'Python', value: 3 }
+      ],
+      JUDGE_STATUS: null,
+      LANGUAGE: null,
+      JUDGE_STATUS_RESERVE: null
     }
   },
   mounted() {
-    this.getStatus()
+    this.search()
+    this.JUDGE_STATUS = Object.assign({}, JUDGE_STATUS)
+    this.LANGUAGE = Object.assign({}, LANGUAGE)
+    this.JUDGE_STATUS_RESERVE = Object.assign({}, JUDGE_STATUS_RESERVE)
   },
   methods: {
+    search() {
+      this.fetch({
+        ...this.queryParams
+      })
+    },
+    fetch(params = {}) {
+      this.loading = true
+      params.size = this.pagination.size
+      params.current = this.pagination.current
+      // 分页查询
+      submitApi.getSubmissions(params).then(res => {
+        this.tableData = res.records
+        this.total = res.total
+        // 刷新标志
+        let refresh = false
+        for (const v of res.records) {
+          if (v.status === JUDGE_STATUS_RESERVE['pending'] ||
+              v.status === JUDGE_STATUS_RESERVE['judging']) {
+            refresh = true
+          }
+        }
+        if (refresh) {
+          this.checkSubmissionsStatus()
+        }
+        this.loading = false
+      }).catch(() => {
+        this.loading = false
+      })
+    },
+    // 对当前提交列表 状态为Pending和Judging的提交记录每2秒查询一下最新结果
+    checkSubmissionsStatus() {
+      // TODO
+    },
     switchPage(val) {
       this.currentPage = val
       this.getStatus()
@@ -228,11 +243,11 @@ export default {
       this.searchPid = ''
       this.getStatus()
     },
-    toSubmit(val) {
-      this.$router.push({ path: '/Submit', query: { pid: val }})
+    goProblemDetails(pid) {
+      this.$router.push({ name: 'ProblemDetails', params: { pid }})
     },
     toCodeView(val) {
-      if (this.$store.getters.getIsLogin) {
+      if (this.$store.getters.isAuthenticated) {
         this.$router.push({ path: '/CodeView', query: { id: val }})
       } else {
         this.$notify({
@@ -245,7 +260,7 @@ export default {
       }
     },
     toUser(val) {
-      if (this.$store.getters.getIsLogin) {
+      if (this.$store.getters.isAuthenticated) {
         this.$router.push({ path: '/User', query: { username: val }})
       } else {
         this.$notify({
@@ -257,18 +272,14 @@ export default {
         })
       }
     },
+    getStatusColor(status) {
+      return JUDGE_STATUS[status].type
+    },
+    getStatusFontColor(status) {
+      return 'color: ' + JUDGE_STATUS[status].color
+    },
     switchResultColor(str) {
-      if (str === 'Accepted' || str === 'Score 100') {
-        return 'success'
-      } else if (str === 'Presentation Error') {
-        return 'warning'
-      } else if (str === 'Pending...' || str === 'Judging...') {
-        return 'info'
-      } else if (str === 'Submit Error' || str.substring(0, 5) === 'Score') {
-        return ''
-      } else {
-        return 'danger'
-      }
+      return JUDGE_STATUS[str].type
     },
     switchResultClass(str) {
       if (str === '-') {
@@ -325,8 +336,7 @@ export default {
   width: 100%;
   min-height: 700px;
   padding-top: 0;
-  margin: 0;
-  margin-bottom: 20px;
+  margin: 0 0 20px;
   font-family: 微软雅黑, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -348,35 +358,5 @@ export default {
 
 .bar-search-item {
   margin-right: 20px;
-}
-
-.bottom-pagination {
-  float: right;
-  margin-bottom: 10px;
-}
-
-.green-font {
-  font-weight: bold;
-  color: green;
-}
-
-.orange-font {
-  font-weight: bold;
-  color: orange;
-}
-
-.grey-font {
-  font-weight: bold;
-  color: grey;
-}
-
-.blue-font {
-  font-weight: bold;
-  color: blue;
-}
-
-.red-font {
-  font-weight: bold;
-  color: red;
 }
 </style>
