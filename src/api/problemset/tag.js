@@ -1,10 +1,10 @@
-import service from '@/api/http'
+import request from '@/api/http'
 
-export function getAll() {
-  return service({
+export function getAllTag() {
+  return request({
     url: 'tags/all',
     method: 'get'
   })
 }
 
-export default { getAll }
+export default { getAllTag }
