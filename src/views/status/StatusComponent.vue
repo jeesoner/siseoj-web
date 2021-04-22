@@ -67,10 +67,11 @@
         min-width="12%"
       >
         <template slot-scope="scope">
-          <el-link
+          {{ scope.row.username }}
+          <!-- <el-link
             type="primary"
             @click="toUser(scope.row.username)"
-          >{{ scope.row.username }}</el-link>
+          >{{ scope.row.username }}</el-link> -->
         </template>
       </el-table-column>
       <el-table-column
@@ -104,10 +105,11 @@
         min-width="8%"
       >
         <template slot-scope="scope">
-          <el-link
+          {{ LANGUAGE[scope.row.language] }}
+          <!-- <el-link
             type="primary"
             @click="toCodeView(scope.row.id)"
-          >{{ LANGUAGE[scope.row.language] }}</el-link>
+          >{{ LANGUAGE[scope.row.language] }}</el-link> -->
         </template>
       </el-table-column>
       <el-table-column

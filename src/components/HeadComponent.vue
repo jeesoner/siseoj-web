@@ -1,282 +1,171 @@
 <template>
-
-  <div class="head-box">
+  <div id="header">
     <el-menu
-      class="el-menu"
+      :default-active="activeMenuName"
       mode="horizontal"
-      background-color="#f5f5f5"
-      active-text-color="#409EFF"
-      text-color="#333333"
-      :default-active="activeIndex"
       router
-      @select="handleMenuSelect"
+      active-text-color="#2196f3"
+      text-color="#495060"
+      background-color="#eee"
     >
-      <el-menu-item index="Index"><i class="el-icon-s-home" />主 页</el-menu-item>
-      <el-menu-item index="LocalProblem"><i class="el-icon-menu" />题 库</el-menu-item>
-      <el-menu-item index="Status"><i class="el-icon-s-order" />评 测</el-menu-item>
-      <el-submenu index="ContestSub">
-        <template slot="title"><i class="el-icon-s-platform" />比 赛</template>
-        <!-- <el-menu-item index="Contest?kind=0">练习</el-menu-item> -->
-        <el-menu-item index="Contest?kind=1">积分</el-menu-item>
-        <el-menu-item index="Contest?kind=3">正式</el-menu-item>
-        <!-- <el-menu-item index="Contest?kind=5">自定义</el-menu-item> -->
-      </el-submenu>
-      <el-submenu index="RankSub">
-        <template slot="title"><i class="el-icon-s-data" />排 名</template>
-        <el-menu-item index="MainRank">积分榜</el-menu-item>
-      </el-submenu>
-      <!-- <el-menu-item v-show="isLogin" index="Challenge"><i class="el-icon-star-on" />挑战模式</el-menu-item> -->
-      <el-menu-item index="Discuss"><i class="el-icon-s-comment" />讨 论</el-menu-item>
-      <!-- <el-menu-item index="VideoLesson">视频课堂</el-menu-item> -->
-      <!-- <el-menu-item index="Mall"><i class="el-icon-s-shop" />商 城</el-menu-item> -->
-      <el-menu-item
-        v-if="isAdmin"
-        index="Admin"
-      >管理员</el-menu-item>
-      <!-- 方便调试暂时设置，正式部署时需要去除 -->
-      <!-- <el-menu-item index="Test">测试</el-menu-item> -->
-      <el-menu-item
-        v-if="!isLogin"
-        class="el-menu-item-right"
-        index="Login"
-      >登录</el-menu-item>
-      <el-menu-item
-        v-if="!isLogin"
-        class="el-menu-item-right"
-        index="Register"
-      >注册</el-menu-item>
-      <div class="menu-rightside">
+      <div class="logo">
+        <el-image style="width: 139px; height: 50px" :src="imgUrl" fit="scale-down" />
+      </div>
+      <el-menu-item index="/home"><i class="el-icon-s-home" />主页</el-menu-item>
+      <el-menu-item index="/problems"><i class="el-icon-menu" />题库</el-menu-item>
+      <el-menu-item index="/status"><i class="el-icon-s-marketing" />评测</el-menu-item>
+      <el-menu-item index="/contest"><i class="el-icon-trophy" />比赛</el-menu-item>
+      <el-menu-item index="/rank"><i class="el-icon-s-data" />排名</el-menu-item>
+      <el-menu-item index="/discuss"><i class="el-icon-s-comment" />讨论</el-menu-item>
+
+      <template v-if="!isAuthenticated">
+        <div class="btn-menu">
+          <el-button
+            type="primary"
+            round
+            @click="handleBtnClick('Login')"
+          >登录
+          </el-button>
+          <el-button
+            round
+            type="danger"
+            style="margin-left: 5px"
+            @click="handleBtnClick('Register')"
+          >注册
+          </el-button>
+        </div>
+      </template>
+      <template v-else class="menu-right-side">
         <el-dropdown
-          v-if="isLogin"
-          class="el-menu-item-userinfo"
-          @command="handleCommand"
+          class="drop-menu"
+          @command="handleRoute"
         >
-          <router-link
-            to="User"
-            class="router-link"
-          >
-            <el-avatar
-              :size="25"
-              :src="$store.getters.getAvatarUrl"
-            />
-            <el-badge
-              v-if="unReadMsgCount > 0"
-              is-dot
-              class="badge-dot"
-            >
-              <i>{{ $store.getters.getUsername }}</i>
-              <i class="el-icon-arrow-down" />
-            </el-badge>
-            <i v-else>
-              {{ $store.getters.getUsername }}
-              <i class="el-icon-arrow-down" />
-            </i>
-          </router-link>
+          <span class="el-dropdown-link">
+            {{ user.nickname }}<i class="el-icon-caret-bottom" />
+          </span>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item command="toMessage">
-              <el-badge
-                v-if="unReadMsgCount > 0"
-                :value="unReadMsgCount"
-                :max="99"
-                class="mark"
-              >
-                <span>
-                  <i class="el-icon-message">消息</i>
-                </span>
-              </el-badge>
-              <span v-else>
-                <i class="el-icon-message">消息</i>
-              </span>
-            </el-dropdown-item>
-            <el-dropdown-item
-              command="toEditUser"
-              divided
-            >
-              <i class="el-icon-edit">编辑</i>
-            </el-dropdown-item>
-            <el-dropdown-item
-              command="toVerify"
-              divided
-            >
-              <i class="el-icon-document-checked">认证</i>
-            </el-dropdown-item>
-            <el-dropdown-item
-              command="logout"
-              divided
-            >
-              <i class="el-icon-switch-button">退出</i>
-            </el-dropdown-item>
+            <el-dropdown-item command="/user-home">个人主页</el-dropdown-item>
+            <el-dropdown-item command="/status?mine=true">评测记录</el-dropdown-item>
+            <el-dropdown-item command="/setting">设置</el-dropdown-item>
+            <el-dropdown-item v-if="isSuperAdmin" command="/admin">管理</el-dropdown-item>
+            <el-dropdown-item divided command="logout">登出</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
-      </div>
+        <avatar
+          :username="user.username"
+          :inline="true"
+          :size="30"
+          color="#FFF"
+          :src="baseApi + '/avatar/' + avatar"
+          class="drop-avatar"
+        />
+      </template>
     </el-menu>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import Avatar from 'vue-avatar'
+
 export default {
   name: 'Head',
+  components: { Avatar },
   data() {
     return {
-      picSrc: require('../assets/image/logo.png'),
       type: false,
       datas: [],
       avatarUrl: '',
-      activeIndex: ''
+      imgUrl: require('@/assets/logo.png')
     }
   },
   computed: {
-    isLogin() {
-      return this.$store.getters.getIsLogin
-    },
-    isAdmin() {
-      return this.$store.getters.getIsAdmin
-    },
-    isClockIn() {
-      return this.$store.getters.getIsClockIn
-    },
+    ...mapGetters(['isAuthenticated', 'isSuperAdmin', 'user', 'baseApi']),
     unReadMsgCount() {
       return this.$store.getters.getUnReadMsgCount
-    }
-  },
-  created() { },
-  mounted() {
-    if (this.isLogin) {
-      this.checkUnReadMsgCount()
-    }
-    this.activeIndex = this.$store.getters.getActiveIndex
-  },
-  methods: {
-    handleMenuSelect(key) {
-      this.activeIndex = key
-      this.$store.commit('setActiveIndex', key)
     },
-    // add by axiang [20190628] 统一处理用户名下拉框的下拉内容
-    handleCommand(command) {
-      if (command === 'toEditUser') {
-        this.toEditUser()
-      } else if (command === 'toMessage') {
-        this.toMessage()
-      } else if (command === 'toVerify') {
-        this.toVerify()
-      } else if (command === 'logout') {
+    activeMenuName() {
+      return '/' + this.$route.path.split('/')[1]
+    },
+    avatar() {
+      return this.$store.getters.user.avatar
+    }
+  },
+  created() {},
+  mounted() {},
+  methods: {
+    handleBtnClick(mode) {
+      if (mode === 'Register') {
+        this.$router.push({ name: 'Register' })
+      } else {
+        this.$router.push({ name: 'Login' })
+      }
+    },
+    handleRoute(route) {
+      if (route === 'logout') {
         this.logout()
+      } else if (route && route.indexOf('admin') < 0) { // 不是去管理端的路由
+        this.$router.push(route)
+      } else {
+        window.open('/admin/')
       }
     },
     logout() {
       // 请求后端登出
       this.$store.dispatch('logout')
-      this.toIndex()
+      this.$router.push({ path: '/' })
       this.$message({
         message: '您已退出登录',
         type: 'success',
         duration: 2000
       })
-    },
-    honorRank() {
-      this.$router.push({ path: 'HonorRank' })
-    },
-    toIndex() {
-      this.$router.push({ path: '/' })
-    },
-    toEditUser() {
-      this.$router.push({ path: 'EditUser' })
-    },
-    toClockIn() {
-      this.$store.commit('setIndex', '')
-      this.$router.push({ path: 'CheckIn' })
-    },
-    toMessage() {
-      this.$router.push({ path: 'Message' })
-    },
-    toVerify() {
-      this.$router.push({ path: 'Verify' })
-    },
-    // add by axiang [20190613] 签到
-    async clockin() {
-      const username = this.$store.getters.getUsername
-      const params = new URLSearchParams()
-      params.append('username', username)
-      const dataSetClockIn = await this.$http
-        .post('/check_in/check', params)
-        .catch(() => { })
-      if (dataSetClockIn.code !== 10000) {
-        this.$message({
-          message: '签到失败:' + dataSetClockIn.msg,
-          type: 'error'
-        })
-        this.$store.commit('setIsClockIn', false)
-      } else {
-        this.$message({ message: '签到成功！', type: 'success' })
-        this.$store.commit('setIsClockIn', true)
-        this.toClockIn()
-      }
-    },
-    async checkUnReadMsgCount() {
-      this.logger.ms('UnReadMsgCount', '未读消息数量')
-      const username = this.$store.getters.getUsername
-      const params = new URLSearchParams()
-      params.append('username', username)
-      const dataUnReadMsgCount = await this.$http.get('/user_message/unread/count/get', params)
-      const unReadMsgCount = dataUnReadMsgCount.datas[0]
-      this.$store.commit('setUnReadMsgCount', unReadMsgCount)
-      this.logger.me('UnReadMsgCount', '未读消息数量')
     }
   }
 }
 </script>
 
 <style scoped >
-.head-box {
-  width: 90%;
-  margin: auto;
-}
-
-.logo-menu-item {
-  padding: 0;
-  margin: 0;
-  width: 100px;
-}
-
-.logo-pic {
+#header {
+  min-width: 300px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: auto;
   width: 100%;
-  height: 100%;
+  z-index: 2000;
+  background-color: #fff;
+  box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.1);
 }
-
-.el-menu {
-  width: 100%;
-  border-left: #eeeeee 1px solid;
-  border-right: #eeeeee 1px solid;
+.logo {
+  margin-left: 2%;
+  margin-right: 2%;
+  float: left;
+  width: 139px;
+  height: 42px;
+  margin-top: 5px;
 }
-
-.el-menu-item-right {
-  float: right !important;
-  border-right: 0;
-  border-left: #eeeeee 1px solid;
-}
-
-.router-link {
-  text-decoration: none;
-  color: black;
-}
-
-.el-menu-item-userinfo {
-  line-height: 4;
-  min-width: 120px;
-  width: auto;
-  border-left: 1px solid #eeeeee;
-}
-
-.menu-rightside {
+.menu-right-side {
   float: right;
 }
-
-.clockin-button {
-  margin-right: 20px;
-}
-
-.badge-dot {
-  line-height: 0px;
+.btn-menu {
+  font-size: 16px;
+  float: right;
   margin-right: 10px;
+  margin-top: 10px;
+}
+.drop-menu {
+  float: right;
+  margin-right: 30px;
+  position: relative;
+  font-weight: 500;
+  right: 10px;
+  margin-top: 20px;
+  font-size: 18px;
+}
+.drop-avatar {
+  float: right;
+  margin-right: 15px;
+  position: relative;
+  margin-top: 16px;
 }
 </style>

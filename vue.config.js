@@ -20,7 +20,7 @@ module.exports = {
   },
   productionSourceMap: true,
   configureWebpack: (config) => {
-    if (process.env.NODE_ENV === 'prod') {
+    if (process.env.NODE_ENV === 'production') {
       config.plugins.push(
         new CompressionPlugin({
           filename: '[path].gz[query]',
@@ -68,7 +68,7 @@ module.exports = {
       .end()
 
     config
-      .when(process.env.NODE_ENV !== 'dev',
+      .when(process.env.NODE_ENV !== 'development',
         config => {
           config
             .plugin('ScriptExtHtmlWebpackPlugin')

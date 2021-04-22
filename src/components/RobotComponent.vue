@@ -120,7 +120,7 @@ export default {
       //   this.src = 'http://39.100.235.47:8888/index.html?token=%7B%22to%22%3A%22%23demohelp%22%2C%22from%22%3A%22carol%22%2C%22type%22%3A%22kefu%22%7D&msg=%22home%22&mode=kefu&res=fwh5_desktop'
       // } else if (name === 'Contest' || name === 'ContestInfo') {
       //   this.src = 'http://39.100.235.47:8888/index.html?token=%7B%22to%22%3A%22%23demohelp%22%2C%22from%22%3A%22carol%22%2C%22type%22%3A%22kefu%22%7D&msg=%22rangegame%22&mode=kefu&res=fwh5_desktop'
-      // } else if (name === 'Problem') {
+      // } else if (name === 'problem') {
       //   this.src = 'http://39.100.235.47:8888/index.html?token=%7B%22to%22%3A%22%23demohelp%22%2C%22from%22%3A%22carol%22%2C%22type%22%3A%22kefu%22%7D&msg=%22subject%22&mode=kefu&res=fwh5_desktop'
       // }
       // document.getElementById('content').src = this.src

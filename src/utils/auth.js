@@ -1,15 +1,37 @@
 import Cookies from 'js-cookie'
+import Config from '@/settings'
 
-const TokenKey = 'sise-token'
+const tokenKey = Config.tokenKey
+const userKey = Config.userKey
 
 export function getToken() {
-  return Cookies.get(TokenKey)
+  return Cookies.get(tokenKey)
 }
 
-export function setToken(token) {
-  return Cookies.set(TokenKey, token)
+export function setToken(token, rememberMe) {
+  if (rememberMe) {
+    return Cookies.set(tokenKey, token, { expires: Config.tokenCookieExpires })
+  } else return Cookies.set(tokenKey, token)
 }
 
 export function removeToken() {
-  return Cookies.remove(TokenKey)
+  return Cookies.remove(tokenKey)
+}
+
+export function getUser() {
+  const user = Cookies.get(userKey)
+  if (user) {
+    return JSON.parse(user)
+  } else {
+    return {}
+  }
+}
+
+export function setUser(user) {
+  return Cookies.set(userKey, JSON.stringify(user))
+}
+
+export function clear() {
+  Cookies.remove(tokenKey)
+  Cookies.remove(userKey)
 }

@@ -70,7 +70,7 @@
   </div>
 </template>
 <script>
-import formatterDate from '../utils/formatterDate'
+import formatterDate from '../../utils/formatterDate'
 export default {
   data() {
     return {

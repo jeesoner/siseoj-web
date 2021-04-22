@@ -1,47 +1,36 @@
 <template>
   <div id="app">
-    <el-container>
-      <el-header>
-        <Head />
-      </el-header>
-      <el-main>
-        <transition
-          name="fade"
-          mode="out-in"
-        >
-          <keep-alive>
-            <router-view v-if="$route.meta.keepAlive">
-              <!-- 这里是会被缓存的视图组件 -->
-            </router-view>
-          </keep-alive>
-        </transition>
-        <transition
-          name="fade"
-          mode="out-in"
-        >
-          <router-view v-if="!$route.meta.keepAlive">
+    <Head />
+    <div class="oj-content">
+      <transition name="el-fade-in-linear">
+        <keep-alive>
+          <router-view v-if="$route.meta.keepAlive">
             <!-- 这里是会被缓存的视图组件 -->
           </router-view>
-        </transition>
-      </el-main>
-      <el-footer height="90px">
-        <Foot />
-      </el-footer>
-    </el-container>
-    <BackTop />
+        </keep-alive>
+      </transition>
+      <transition name="el-fade-in-linear">
+        <router-view v-if="!$route.meta.keepAlive">
+          <!-- 这里是不会被缓存的视图组件 -->
+        </router-view>
+      </transition>
+    </div>
+    <div class="footer">
+      <a style="color:#1E9FFF" href="#">粤ICP备×××××××号-1</a>
+      <p>
+        Powered by
+        <a href="#" style="color:#1E9FFF">Cijee</a>
+      </p>
+    </div>
   </div>
 </template>
 
 <script>
 import Head from '@/components/HeadComponent'
-import Foot from '@/components/FootComponent'
-import BackTop from './components/BackTopComponent'
 
 export default {
   components: {
-    Head,
-    Foot,
-    BackTop
+    Head
   },
   // 自定义指令
   directives: {},
@@ -70,46 +59,18 @@ export default {
 </script>
 
 <style lang="scss">
-#app {
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.oj-content {
+  margin-top: 90px;
+  padding: 0 5px;
+}
+.footer {
+  height: 50px;
+  margin-top: 20px;
+  margin-bottom: 20px;
   text-align: center;
+  font-size: small;
 }
-
-.el-header {
-  position: fixed;
-  width: 100%;
-  z-index: 2000;
-  background-color: #f5f5f5;
-  // box-shadow: 5px 5px 5px #888888;
-}
-
-.el-main {
-  margin-top: 60px;
-  background-color: #ffffff;
-}
-
-.el-footer {
-  box-shadow: 0px 0px 5px 2px #888888;
-  background-color: #f5f5f5;
-}
-
-.fade-enter {
-  opacity: 0;
-}
-
-.fade-enter-active {
-  transition: opacity 0.5s;
-}
-
-.fade-leave {
-  opacity: 1;
-}
-
-.fade-leave-active {
-  opacity: 0;
-  transition: opacity 0.5s;
+.history-select-row {
+  background-color: #ECF5FF !important;
 }
 </style>
