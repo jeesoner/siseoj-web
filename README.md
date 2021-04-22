@@ -1,19 +1,28 @@
-# siseoj-web 开发中.....
+# siseoj-web
 
-## 项目初始化
-```
+## 构建设置
+
+
+```bash
+# 克隆项目
+git clone https://github.com/cijee/siseoj-web.git
+
+# 进入到项目目录
+cd siseoj-web
+
+# 安装依赖
 npm install
-```
 
-### 项目开发部署到本地
-```
+# 运行dev环境
 npm run dev
 ```
 
-### 项目打包
-```
-npm run build
-```
+项目运行地址 http://localhost:9528
 
-### 个性化设置
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## 打包
+
+```bash
+
+# 打包到生产环境
+npm run build:prod
+```
