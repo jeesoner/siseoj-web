@@ -1,6 +1,5 @@
 
 <template>
-  <!--TODO: add by axiang [20191112] 这个瓜皮界面要重做，太傻了  -->
   <div class="docker">
     <el-card class="box-card">
       <div slot="header">
