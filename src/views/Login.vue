@@ -2,7 +2,7 @@
   <div class="login">
     <el-form ref="loginForm" style="text-align: left;" :model="loginForm" :rules="loginRules" label-position="left" label-width="0px" class="login-form">
       <h3 class="title">
-        SISE-OJ 登录用户中心
+        Niu Code 登录用户中心
       </h3>
       <el-form-item prop="username">
         <el-input v-model="loginForm.username" type="text" auto-complete="off" placeholder="账号">
@@ -57,8 +57,8 @@ export default {
     return {
       codeUrl: '',
       loginForm: {
-        username: 'root',
-        password: '123abc',
+        username: '',
+        password: '',
         rememberMe: false,
         uuid: '',
         code: ''
@@ -113,7 +113,9 @@ export default {
           code: this.loginForm.code,
           uuid: this.loginForm.uuid
         }
-        user.password = encrypt(user.password)
+        if (user.password !== this.cookiePass) {
+          user.password = encrypt(user.password)
+        }
         if (valid) {
           this.loading = true
           console.log(this.loginForm.rememberMe)
@@ -127,8 +129,7 @@ export default {
             Cookies.remove('rememberMe')
           }
           this.$store.dispatch('login', user).then(res => {
-            this.$store.commit('setIsLogin', true)
-            this.$router.push({ path: '/' })
+            this.$router.push({ path: '/home' })
             this.loading = false
             this.$message({
               title: '提示',
@@ -183,7 +184,7 @@ export default {
 }
 </script>
 
-<style rel="stylesheet/scss" lang="scss">
+<style lang="scss" scoped>
   .login {
     display: flex;
     justify-content: center;
@@ -199,7 +200,7 @@ export default {
 
   .login-form {
     border-radius: 6px;
-    background: #ffffff;
+    background: #eee;
     width: 385px;
     padding: 25px 25px 5px 25px;
     .el-input {
